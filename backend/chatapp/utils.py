@@ -96,6 +96,7 @@ class Util:
             data = {
                 'apikey': Util.API_KEY,
                 'isOverlayRequired': False,
+                # 'language': "fre"
             }
             resp = requests.post(Util.API_URL, files=files, data=data)
         resp.raise_for_status()

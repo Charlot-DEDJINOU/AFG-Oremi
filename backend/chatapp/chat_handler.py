@@ -114,7 +114,6 @@ class ChatHandler:
     def generate_response(self, payload: Dict[str, Any]) -> Generator[str, None, None]:
         """Génère une réponse token par token à partir d'un modèle LLM"""
         # Vérification des paramètres requis
-        # print(payload,"dddddddddddddddddddddd")
         # if not payload.get("messages"):
         #     raise ChatHandlerError(
         #         message="Historique de messages non fourni",
@@ -159,10 +158,14 @@ class ChatHandler:
                 prompt_template_str = payload.get("promptTemplate")
                 if not prompt_template_str:
                     prompt_template_str = (
-                        "You are a helpful assistant called OuebxChat. "
-                        "Context: {history}\n"
-                        "User: {input}\n"
-                        "Assistant:"
+                        """Vous êtes OREMI, l'assistant IA conversationnel d'AFG Assurances Bénin, spécialisé dans la souscription d'assurance 100% digitale.
+
+                        ## VOTRE MISSION
+                        - Guider les utilisateurs dans la souscription d'assurance (Auto, Moto, Habitation, Voyage)
+                        - Communiquer en français simple et accessible
+                        Context: {history}\n
+                        User: {input}\n
+                        Assistant:"""
                     )
                 prompt = PromptTemplate(
                     input_variables=["history", "input"],

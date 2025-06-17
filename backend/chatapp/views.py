@@ -1067,17 +1067,21 @@ Tu es un assistant expert en extraction de données depuis le texte OCR d’un p
 Objectif : repérer et normaliser un maximum d’informations du permis, puis renvoyer strictement un JSON
 contenant *exactement* les clefs suivantes (mettre "" si la donnée est absente) :
 
-- numeroPermis
-- categorie
-- dateDelivrance
-- dateExpiration
-- titulaire_nom
-- titulaire_prenom
-- dateNaissance
-- lieuNaissance
-- lieuDelivrance
-- numeroPermisPrecedent
-- observations
+- numeroPersonalIdentification  # Numéro Personnel d’Identification (NPI)
+- numeroPermis               # Numéro du permis
+- categorie                  # Catégorie du permis (A, B, etc.)
+- dateDelivrance             # Date de délivrance
+- dateExpiration             # Date d’expiration
+- autoriteDelivrance         # Autorité de délivrance (ex. ANaTT)
+- restrictions               # Restrictions éventuelles (icônes ou codes)
+- sexe                       # Sexe du titulaire
+- groupeSanguin              # Groupe sanguin
+- titulaire_nom              # Nom du titulaire
+- titulaire_prenom           # Prénom(s) du titulaire
+- dateNaissance              # Date de naissance
+- lieuNaissance              # Lieu de naissance
+- lieuDelivrance             # Lieu de délivrance
+- observations   
 
 Instructions :
 1. Analyse chaque ligne, y compris les abréviations (ex. "N° législation" pour catégorie).
@@ -1096,18 +1100,26 @@ Tu es un assistant expert en extraction de données depuis le texte OCR d’une 
 Objectif : repérer et normaliser un maximum d’informations, puis renvoyer strictement un JSON
 contenant *exactement* les clefs suivantes (mettre "" si la donnée est absente) :
 
-- typeDocument
-- numeroDocument
-- titulaire_nom
-- titulaire_prenom
-- dateNaissance
-- lieuNaissance
-- sexe
-- nationalite
-- dateDelivrance
-- lieuDelivrance
-- dateExpiration
-- observations
+- typeDocument                  # CIP, passeport ou autre
+- numeroDocument                # Numéro principal du document
+- numeroPersonalIdentification  # NPI (numéro personnel d’identification)
+- titulaire_nom                 # Nom du titulaire
+- titulaire_prenom              # Prénom(s) du titulaire
+- dateNaissance                 # Date de naissance
+- lieuNaissance                 # Lieu de naissance
+- sexe                          # Sexe
+- nationalite                   # Nationalité
+- dateDelivrance                # Date de délivrance
+- lieuDelivrance                # Lieu de délivrance
+- dateExpiration                # Date d’expiration
+- com                           # Commune (com.)
+- arr                           # Arrondissement (arr.)
+- qt                            # Quartier (qt.)
+- lieu                          # Lieu (lieu)
+- pere                          # Nom du père
+- mere                          # Nom de la mère
+- observations                  # Autres remarques (QR code, filiation, etc.)
+- dateExpiration                # Date d’expiration / Expire le, ets
 
 Instructions :
 1. Identifie le type de document (CIP, passeport, autre).
@@ -1176,7 +1188,7 @@ class ExtractCardInfoViewSet(viewsets.ViewSet):
             'messages': [],
             'content': prompt,
             'modelId': 'llama',
-            'temperature': 0.9,
+            'temperature': 0.98,
             'maxTokens': 1024
         })
         output = ''.join(token for token in stream)

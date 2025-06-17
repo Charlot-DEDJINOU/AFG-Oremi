@@ -13,7 +13,7 @@ def ocr_file(path):
         files = {'file': f}
         data = {
             'apikey': API_KEY,
-            # 'language': languages,
+            'language': 'eng',
             'isOverlayRequired': False,
         }
         resp = requests.post(API_URL, files=files, data=data)
