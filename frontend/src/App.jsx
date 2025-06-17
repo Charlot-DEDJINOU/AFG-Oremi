@@ -5,6 +5,7 @@ import NotFound from "./views/NotFound"
 import ChatBot from "./components/chat";
 import Home from "./views/Home";
 import Header from "./components/commons/Header";
+import Footer from "./components/commons/Footer";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
           <Route path="/" element={<Home />} />
         </Routes>
+        <Footer />
         <ChatBot />
         <ToastContainer autoClose={5000} icon={true} transition={Flip} />
       </Router>

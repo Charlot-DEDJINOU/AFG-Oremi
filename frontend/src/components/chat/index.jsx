@@ -200,7 +200,7 @@ const ChatBot = () => {
       >
         <button
           onClick={() => setIsOpen(true)}
-          className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white p-4 rounded-full shadow-2xl transform hover:scale-110 transition-all duration-300 border-2 border-white/20"
+          className="bg-gradient-to-r from-primary to-secondary hover:from-primary hover:to-secondary-700 text-white p-4 rounded-full shadow-2xl transform hover:scale-110 transition-all duration-300 border-2 border-white/20"
         >
           <MessageCircle size={24} />
         </button>
@@ -221,7 +221,7 @@ const ChatBot = () => {
     >
       {/* Header */}
       <div 
-        className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 rounded-t-2xl cursor-move flex items-center justify-between"
+        className="bg-gradient-to-r from-primary to-secondary text-white p-4 rounded-t-2xl cursor-move flex items-center justify-between"
         onMouseDown={handleMouseDown}
       >
         <div className="flex items-center gap-3">
@@ -268,7 +268,7 @@ const ChatBot = () => {
               >
                 <div className="flex items-start gap-2 max-w-[80%]">
                   {message.sender === 'bot' && (
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center flex-shrink-0">
                       <MessageCircle size={14} className="text-white" />
                     </div>
                   )}
@@ -276,20 +276,20 @@ const ChatBot = () => {
                     <div
                       className={`p-3 rounded-2xl ${
                         message.sender === 'user'
-                          ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
+                          ? 'bg-gradient-to-r from-primary to-secondary text-white'
                           : 'bg-white border border-gray-200 text-gray-800'
                       }`}
                     >
                       {message.text}
                     </div>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray">
                         {message.timestamp.toLocaleTimeString()}
                       </span>
                       {message.sender === 'bot' && (
                         <button
                           onClick={() => speakMessage(message.text)}
-                          className="text-gray-400 hover:text-blue-500 transition-colors"
+                          className="text-gray-400 hover:text-primary transition-colors"
                         >
                           <Volume2 size={12} />
                         </button>
@@ -311,14 +311,14 @@ const ChatBot = () => {
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Tapez votre message..."
-                  className="w-full p-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full p-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                   rows={1}
                   style={{ minHeight: '44px', maxHeight: '100px' }}
                 />
                 <button
                   onClick={toggleListening}
                   className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${
-                    isListening ? 'text-tertiary' : 'text-gray-400 hover:text-blue-500'
+                    isListening ? 'text-tertiary' : 'text-gray-400 hover:text-primary'
                   } transition-colors`}
                 >
                   {isListening ? <MicOff size={18} /> : <Mic size={18} />}
