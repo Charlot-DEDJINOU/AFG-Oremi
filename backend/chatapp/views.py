@@ -1005,7 +1005,7 @@ PROMPT_GRIS = """
 Tu es un assistant expert en extraction de données depuis le texte OCR d’une carte grise.
 Objectif : repérer et normaliser un maximum d’informations, puis renvoyer strictement un JSON
 contenant *exactement* les clefs suivantes (mettre "" si la donnée est absente) :
-
+- typeDocument                  # Permis de conduire (si tu constate que ce n'est pas permis, tu mets SEULEMENT à quel document ça ressemble)
 - immatriculation
 - datePremiereImmatriculation
 - numeroFormule
@@ -1066,7 +1066,7 @@ PROMPT_PERMIS = """
 Tu es un assistant expert en extraction de données depuis le texte OCR d’un permis de conduire.
 Objectif : repérer et normaliser un maximum d’informations du permis, puis renvoyer strictement un JSON
 contenant *exactement* les clefs suivantes (mettre "" si la donnée est absente) :
-
+- typeDocument                  # Carte grise, Attestion d'immatriculation, Certificat d'immatriculation (si tu ne trouve pas entre les trois, tu mets SEULEMENT à quel document ça ressemble)
 - numeroPersonalIdentification  # Numéro Personnel d’Identification (NPI)
 - numeroPermis               # Numéro du permis
 - categorie                  # Catégorie du permis (A, B, etc.)
