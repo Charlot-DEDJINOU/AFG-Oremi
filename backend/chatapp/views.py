@@ -1188,7 +1188,7 @@ class ExtractCardInfoViewSet(viewsets.ViewSet):
             'messages': [],
             'content': prompt,
             'modelId': 'llama',
-            'temperature': 0.98,
+            'temperature': 1,
             'maxTokens': 1024
         })
         output = ''.join(token for token in stream)
