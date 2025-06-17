@@ -182,7 +182,7 @@ SIMPLE_JWT = {
 CORS_ALLOWED_ORIGINS = [
     # "localhost",
     # "http://127.0.0.1:9000",
-    #  "http://localhost:5173"
+    "http://localhost:5173",
 ]
 
 from corsheaders.defaults import default_headers
@@ -191,7 +191,10 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 # Autorise tous les headers (en se basant sur les headers par défaut, avec possibilité d'ajouter des headers personnalisés si nécessaire)
-CORS_ALLOW_HEADERS = list(default_headers)
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "cache-control",
+    "Access-Control-Allow-Headers"
+]
 
 # Autorise les méthodes standard (optionnel)
 CORS_ALLOW_METHODS = [
