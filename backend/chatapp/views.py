@@ -1100,7 +1100,7 @@ Tu es un assistant expert en extraction de données depuis le texte OCR d’une 
 Objectif : repérer et normaliser un maximum d’informations, puis renvoyer strictement un JSON
 contenant *exactement* les clefs suivantes (mettre "" si la donnée est absente) :
 
-- typeDocument                  # CIP, passeport ou autre
+- typeDocument                  # CIP (pour avoir ce type, il faut nécéssaireement la présence de # Numéro Personnel d’Identification (NPI)),  passeport, CNI ou autre
 - numeroDocument                # Numéro principal du document
 - numeroPersonalIdentification  # NPI (numéro personnel d’identification)
 - titulaire_nom                 # Nom du titulaire
