@@ -1000,51 +1000,52 @@ import tempfile, os, requests, base64, mimetypes
 parser = JsonOutputParser(diff=False)
 format_instructions = parser.get_format_instructions()
 
+
 # Prompt for vehicle registration card (carte grise)
 PROMPT_GRIS = """
 Tu es un assistant expert en extraction de données depuis le texte OCR d’une carte grise.
 Objectif : repérer et normaliser un maximum d’informations, puis renvoyer strictement un JSON
 contenant *exactement* les clefs suivantes (mettre "" si la donnée est absente) :
-- typeDocument                  # Permis de conduire (si tu constate que ce n'est pas permis, tu mets SEULEMENT à quel document ça ressemble)
-- immatriculation
-- datePremiereImmatriculation
-- numeroFormule
-- codeType
-- designationCommerciale
-- marque
-- modele
-- varianteVersion
-- genreVehicule
-- carrosserie
-- carburant
-- energie
-- puissanceFiscale
-- puissanceDIN
-- cylindree
-- masseEnChargeMaxAutorisee
-- poidsÀVide
-- ptac
-- ptacRemorque
-- nombrePlacesAssises
-- couleur
-- numeroVIN
-- immatriculationPrecedente
-- titulaire_nom
-- titulaire_prenom
-- titulaire_adresse_numero
-- titulaire_adresse_rue
-- titulaire_adresse_codePostal
-- titulaire_adresse_ville
-- coTitulaire_nom
-- coTitulaire_prenom
-- coTitulaire_adresse_numero
-- coTitulaire_adresse_rue
-- coTitulaire_adresse_codePostal
-- coTitulaire_adresse_ville
-- statutProprietaire
-- typeCertificat
-- dateValiditeCertificat
-- observations
+- typeDocument                  # « CERTIFICAT D’IMMATRICULATION » en en-tête
+- immatriculation               # numéro A : « AB 52 91 RB »
+- datePremiereImmatriculation   # date de 1ʳᵉ mise en circulation (B) : « 17/03/2007 »
+- numeroFormule                 # N° de formulaire/report en haut : « Z 12 458 »
+- codeType                      # code type (C) : « C 1580 A »
+- designationCommerciale        # (souvent vide si non indiqué)
+- marque                        # Marque (E) : « CHAUSSON »
+- modele                        # Type/model (E) : « CHAU-FLASH » (si distinct de la marque)
+- varianteVersion               # Version/variante (E) : (s’il y en a)
+- genreVehicule                 # Genre (E) : « VOITURE PART »
+- carrosserie                   # Carrosserie (E) : « CONDUITE »
+- carburant                     # Type de carburant : « DIESEL »
+- energie                       # même que carburant si répétitif : « DIESEL »
+- puissanceFiscale              # Puissance fiscale (si indiquée)
+- puissanceDIN                  # Puissance CV (Puissance) : « 130 CV »
+- cylindree                     # Cylindrée (si spécifié)
+- masseEnChargeMaxAutorisee     # P.T. en charge : « 3500 »
+- poidsÀVide                    # Poids à vide : « 2915 »
+- ptac                          # PTAC (éventuellement identique à P.T. en charge) : « 3500 »
+- ptacRemorque                  # PTAC remorque (si présent)
+- nombrePlacesAssises           # Nʳ de places assises (A) : (vide si non indiqué)
+- couleur                       # Couleur : « BLANCHE »
+- numeroVIN                     # N° de série du châssis/moteur : « GTU56YRB3204Z76338 »
+- immatriculationPrecedente     # Immatriculation précédente : « SZ 8472 »
+- titulaire_nom                 # Nom (C) : « L APECHE »
+- titulaire_prenom              # Prénoms (D) : « L MARTINE »
+- titulaire_adresse_numero      # N° de carré ou maison (si présent)
+- titulaire_adresse_rue         # Rue/quartier (E) : « QUARTIER JACQUES »
+- titulaire_adresse_codePostal  # Code postal (si format local, souvent absent)
+- titulaire_adresse_ville       # Ville (E) : « CALAVI »
+- coTitulaire_nom               # (vide si pas de co-titulaire)
+- coTitulaire_prenom            # (vide si pas de co-titulaire)
+- coTitulaire_adresse_numero    # idem
+- coTitulaire_adresse_rue       # idem
+- coTitulaire_adresse_codePostal# idem
+- coTitulaire_adresse_ville     # idem
+- statutProprietaire            # Profession/statut : « RESPONSABLE TA (DMA) »
+- typeCertificat                # « Certificat d’immatriculation » (répétition du type)
+- dateValiditeCertificat        # Date de validité (si imprimée)
+- observations                  # Tout autre texte libre en bas de page
 
 Instructions :
 1. Analyse chaque ligne du texte OCR, y compris les libellés et abréviations.
@@ -1053,7 +1054,7 @@ Instructions :
    - Dates en JJ/MM/AAAA
    - Poids en kg
    - Puissances en CV ou kW selon le contexte
-4. Remplis chaque clef du JSON, même vide.
+4. Remplis chaque clef du JSON, même si vide.
 5. Ne renvoie **que** l’objet JSON valide, sans aucun commentaire.
 
 {format_instructions}
