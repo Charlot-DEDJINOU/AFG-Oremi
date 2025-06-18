@@ -4,7 +4,7 @@ import { postResource } from "../services/api"; // Ajustez le chemin selon votre
 
 export const useChatStore = () => {
   const [messages, setMessages] = useState([
-    { text: "Bonjour ! Je suis votre assistant virtuel. Comment puis-je vous aider aujourd'hui ?", sender: 'assistant', timestamp: new Date() }
+    { text: "Bonjour ! Je suis votre assistant virtuel et ami numérique. Je suis là pour vous aider à tout comprendre et même réaliser des devis sans effort de votre part. Dites-moi tout ce dont vous avez besoin : cliquez sur le bouton audio pour exprimer vos demandes vocalement, et utilisez les boutons audio en bas des messages pour une lecture rapide !", sender: 'assistant', timestamp: new Date() }
   ]);
   const [isOpen, setIsOpen] = useState(false);
   const [position, setPosition] = useState({ x: 20, y: 20 });

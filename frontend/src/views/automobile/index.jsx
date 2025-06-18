@@ -1,9 +1,50 @@
-import React, { useState, useCallback } from 'react';
-import { Upload, FileText, CreditCard, Car, Check, X, Camera, User, Calendar, MapPin, Settings, ChevronRight, Download, Shield, Receipt } from 'lucide-react';
+// import React, { useState, useCallback, useEffect } from 'react';
+// import { Upload, FileText, CreditCard, Car, Check, X, Camera, User, Calendar, MapPin, Settings, ChevronRight, Download, Shield, Receipt, Sparkles, Eye, AlertCircle } from 'lucide-react';
 import { postFile } from '../../services/api';
 import { onServerError } from '../../services/Helper';
 import { CardGrise } from '../../data/CardGrise';
 import { convertDateToISO } from '../../utils/convertDateToISO';
+import React, { useState, useCallback, useEffect } from 'react';
+import { Upload, FileText, CreditCard, Car, Check, X, Camera, User, Calendar, MapPin, Settings, ChevronRight, Download, Shield, Receipt, Sparkles, Eye, AlertCircle, Volume2, VolumeX } from 'lucide-react';
+
+// Hook personnalisé pour la synthèse vocale
+const useSpeech = () => {
+    const [isEnabled, setIsEnabled] = useState(true); // Activé par défaut
+    const [isSpeaking, setIsSpeaking] = useState(false);
+
+    const speak = useCallback((text, priority = 'normal') => {
+        if (!isEnabled || !text) return;
+
+        // Arrêter la synthèse en cours si priorité haute
+        if (priority === 'high' && window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+        }
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.25;
+        utterance.lang = 'fr-FR';
+        
+        utterance.onstart = () => setIsSpeaking(true);
+        utterance.onend = () => setIsSpeaking(false);
+        utterance.onerror = () => setIsSpeaking(false);
+
+        window.speechSynthesis.speak(utterance);
+    }, [isEnabled]);
+
+    const stop = useCallback(() => {
+        window.speechSynthesis.cancel();
+        setIsSpeaking(false);
+    }, []);
+
+    const toggle = useCallback(() => {
+        if (isEnabled) {
+            stop();
+        }
+        setIsEnabled(!isEnabled);
+    }, [isEnabled, stop]);
+
+    return { speak, stop, toggle, isEnabled, isSpeaking };
+};
 
 const SmartInsuranceForm = () => {
     const [step, setStep] = useState(1);
@@ -21,8 +62,98 @@ const SmartInsuranceForm = () => {
     });
     const [formData, setFormData] = useState({});
     const [loading, setLoading] = useState({});
+    const [fieldStatus, setFieldStatus] = useState({});
+    const [showFieldAnimations, setShowFieldAnimations] = useState(false);
 
-    // Fonction de validation des types de documents
+    // Hook pour la synthèse vocale
+    const { speak, stop, toggle: toggleSpeech, isEnabled: speechEnabled, isSpeaking } = useSpeech();
+
+    // Message de bienvenue au chargement
+    useEffect(() => {
+        setTimeout(() => {
+            speak("Bienvenue sur le formulaire d'assurance automobile. L'assistance vocale est activée. Vous pouvez la désactiver à tout moment en cliquant sur le bouton Audio dans le coin supérieur droit. Utilisez F1 pour l'aide et Tab pour naviguer.", 'high');
+        }, 1000);
+    }, [speak]);
+
+    // Annonces vocales pour les étapes
+    useEffect(() => {
+        if (!speechEnabled) return;
+
+        const announcements = {
+            1: "Étape 1 sur 6. Téléchargement des documents. Vous devez télécharger 3 documents : la carte grise, la carte CIP du bénéficiaire, et le permis de conduire. Utilisez la touche Tab pour naviguer entre les zones de téléchargement.",
+            2: "Étape 2 sur 6. Vérification et complétion du formulaire. Les données ont été extraites automatiquement. Utilisez Tab pour naviguer entre les champs et vérifiez les informations.",
+            6: "Félicitations ! Votre assurance automobile a été souscrite avec succès. Vos documents sont maintenant disponibles au téléchargement. Utilisez Tab pour naviguer entre les documents."
+        };
+
+        if (announcements[step]) {
+            setTimeout(() => speak(announcements[step], 'high'), 500);
+        }
+    }, [step, speechEnabled, speak]);
+
+    // Navigation clavier
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (!speechEnabled) return;
+
+            // Aide vocale avec F1
+            if (e.key === 'F1') {
+                e.preventDefault();
+                const helpTexts = {
+                    1: "Vous êtes sur la page de téléchargement. Utilisez Tab pour naviguer, Entrée pour sélectionner un fichier, et F2 pour activer l'aide vocale sur un élément.",
+                    2: "Vous êtes sur le formulaire. Utilisez Tab pour naviguer, Entrée pour valider, et les flèches pour les listes déroulantes.",
+                    6: "Vous êtes sur la page de téléchargement des documents. Utilisez Tab pour naviguer et Entrée pour télécharger un document."
+                };
+                speak(helpTexts[step] || "Appuyez sur F1 pour l'aide", 'high');
+            }
+
+            // Description vocale avec F2
+            if (e.key === 'F2') {
+                e.preventDefault();
+                const activeElement = document.activeElement;
+                if (activeElement) {
+                    const label = activeElement.getAttribute('aria-label') || 
+                                 activeElement.getAttribute('title') || 
+                                 activeElement.textContent || 
+                                 "Élément sans description";
+                    speak(`Élément actuel : ${label}`, 'high');
+                }
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [speechEnabled, speak, step]);
+
+    // Animation des champs après extraction (LOGIQUE ORIGINALE)
+    useEffect(() => {
+        if (step === 2 && Object.values(extractedData).some(data => data)) {
+            setShowFieldAnimations(true);
+            analyzeFieldStatus();
+        }
+    }, [step, extractedData]);
+
+    const analyzeFieldStatus = () => {
+        const status = {};
+        const requiredFields = [
+            'immatriculation', 'marque', 'modele', 'puissanceFiscale', 'numeroChasis',
+            'dateMiseCirculation', 'placesAssises', 'carburation', 'valeurVehicule', 'valeurVenale',
+            'nom', 'prenom', 'email', 'npi', 'dateNaissance', 'sexe', 'profession',
+            'adresse', 'ville', 'dateObtentionPermis', 'numeroPermis', 'categorieSocio',
+            'dureeAssurance', 'datePriseEffet'
+        ];
+
+        requiredFields.forEach(field => {
+            if (formData[field] && formData[field].toString().trim() !== '') {
+                status[field] = 'auto-filled';
+            } else {
+                status[field] = 'needs-attention';
+            }
+        });
+
+        setFieldStatus(status);
+    };
+
+    // Fonction de validation des types de documents (LOGIQUE ORIGINALE)
     const validateDocumentType = (detectedType, expectedType) => {
         if (!detectedType) return false;
 
@@ -48,9 +179,19 @@ const SmartInsuranceForm = () => {
         }
     };
 
-    // Appel API OCR
+    // Appel API OCR (LOGIQUE ORIGINALE)
     const processDocument = async (file, type) => {
         setLoading(prev => ({ ...prev, [type]: true }));
+
+        // Annonce vocale du début de traitement
+        if (speechEnabled) {
+            const typeNames = {
+                carteGrise: "carte grise",
+                identite: "carte CIP",
+                permis: "permis de conduire"
+            };
+            speak(`Analyse du document ${typeNames[type]} en cours...`);
+        }
 
         let mockData = {};
         let file_type = "";
@@ -64,18 +205,27 @@ const SmartInsuranceForm = () => {
         }
 
         try {
+            // LOGIQUE ORIGINALE - Appel API réel
             const res = await postFile('/cards/extract/', { file, file_type });
             mockData = res.data;
-            console.log(res.data)
+            console.log(res.data);
         } catch (error) {
             onServerError("Une erreur est survenue");
             console.log(error);
+            if (speechEnabled) {
+                speak("Erreur lors de l'analyse du document");
+            }
         }
 
         setExtractedData(prev => ({ ...prev, [type]: mockData }));
         setLoading(prev => ({ ...prev, [type]: false }));
 
-        // Auto-fill form data
+        // Annonce vocale de fin de traitement
+        if (speechEnabled && mockData && Object.keys(mockData).length > 0) {
+            speak("Données extraites avec succès !");
+        }
+
+        // Auto-fill form data (LOGIQUE ORIGINALE)
         updateFormData(mockData, type);
     };
 
@@ -137,20 +287,26 @@ const SmartInsuranceForm = () => {
         };
 
         return (
-            <div className={`border-2 border-dashed rounded-xl p-6 transition-colors ${documentTypeError ? 'border-red-300 bg-red-50' :
-                    hasData && !documentTypeError ? 'border-green-300 bg-green-50' :
-                        'border-gray-300 hover:border-blue-500'
-                }`}>
+            <div className={`border-2 border-dashed rounded-xl p-6 transition-all duration-300 ${
+                documentTypeError ? 'border-red-300 bg-red-50' :
+                hasData && !documentTypeError ? 'border-green-300 bg-green-50 shadow-lg shadow-green-100' :
+                'border-gray-300 hover:border-blue-500 hover:shadow-md'
+            }`}
+            aria-label={`Zone de téléchargement pour ${title}. ${description}`}
+            tabIndex="0"
+            onFocus={() => speechEnabled && speak(`Zone de téléchargement ${title}`)}
+            >
                 <div className="text-center">
-                    <Icon className={`mx-auto h-12 w-12 mb-4 ${documentTypeError ? 'text-red-500' :
-                            hasData && !documentTypeError ? 'text-green-500' :
-                                'text-gray-400'
-                        }`} />
+                    <Icon className={`mx-auto h-12 w-12 mb-4 transition-all duration-300 ${
+                        documentTypeError ? 'text-red-500' :
+                        hasData && !documentTypeError ? 'text-green-500' :
+                        'text-gray-400'
+                    }`} />
                     <h3 className="text-lg font-semibold mb-2">{title}</h3>
                     <p className="text-sm text-gray-600 mb-4">{description}</p>
 
                     {documentTypeError && (
-                        <div className="bg-red-100 border border-red-300 rounded-lg p-3 mb-4">
+                        <div className="bg-red-100 border border-red-300 rounded-lg p-3 mb-4 animate-pulse">
                             <div className="flex items-center gap-2 text-red-800">
                                 <X size={16} />
                                 <span className="font-medium">Type de document incorrect</span>
@@ -168,8 +324,19 @@ const SmartInsuranceForm = () => {
                                 accept="image/*,.pdf"
                                 onChange={(e) => handleFileUpload(e, type)}
                                 className="hidden"
+                                aria-label={`Sélectionner le fichier ${title}`}
                             />
-                            <div className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors inline-flex items-center gap-2">
+                            <div className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all duration-300 hover:scale-105 inline-flex items-center gap-2"
+                                tabIndex="0"
+                                role="button"
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                        e.preventDefault();
+                                        e.target.previousElementSibling.click();
+                                    }
+                                }}
+                                onFocus={() => speechEnabled && speak(`Bouton pour choisir le fichier ${title}`)}
+                            >
                                 <Upload size={16} />
                                 Choisir le fichier
                             </div>
@@ -191,14 +358,14 @@ const SmartInsuranceForm = () => {
                             )}
 
                             {hasData && !isProcessing && !documentTypeError && (
-                                <div className="flex items-center justify-center gap-2 text-green-600">
+                                <div className="flex items-center justify-center gap-2 text-green-600 animate-bounce">
                                     <Check size={16} />
                                     Données extraites avec succès
                                 </div>
                             )}
 
                             {hasData && !isProcessing && documentTypeError && (
-                                <div className="flex items-center justify-center gap-2 text-red-600">
+                                <div className="flex items-center justify-center gap-2 text-red-600 animate-pulse">
                                     <X size={16} />
                                     Document non valide
                                 </div>
@@ -208,8 +375,11 @@ const SmartInsuranceForm = () => {
                                 onClick={() => {
                                     setDocuments(prev => ({ ...prev, [type]: null }));
                                     setExtractedData(prev => ({ ...prev, [type]: null }));
+                                    if (speechEnabled) speak(`Document ${title} supprimé`);
                                 }}
-                                className="text-sm text-red-600 hover:text-red-700"
+                                className="text-sm text-red-600 hover:text-red-700 transition-colors"
+                                aria-label={`Remplacer le document ${title}`}
+                                onFocus={() => speechEnabled && speak(`Bouton pour remplacer ${title}`)}
                             >
                                 Remplacer
                             </button>
@@ -220,32 +390,76 @@ const SmartInsuranceForm = () => {
         );
     };
 
-    const FormField = ({ label, value, onChange, type = "text", required = false, options = null }) => (
-        <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
-                {label} {required && <span className="text-red-500">*</span>}
-            </label>
-            {options ? (
-                <select
-                    value={value || ''}
-                    onChange={(e) => onChange(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                    <option value="">Sélectionner...</option>
-                    {options.map(option => (
-                        <option key={option} value={option}>{option}</option>
-                    ))}
-                </select>
-            ) : (
-                <input
-                    type={type}
-                    value={value || ''}
-                    onChange={(e) => onChange(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-            )}
-        </div>
-    );
+    const FormField = ({ label, value, onChange, type = "text", required = false, options = null, fieldName }) => {
+        const status = fieldStatus[fieldName];
+        const isAutoFilled = status === 'auto-filled';
+        const needsAttention = status === 'needs-attention';
+
+        const fieldDescription = `${label}${required ? ', champ obligatoire' : ''}${isAutoFilled ? ', auto-rempli' : ''}${needsAttention ? ', à compléter' : ''}`;
+
+        return (
+            <div className={`space-y-2 transition-all duration-500 ${
+                showFieldAnimations ? 'animate-in' : ''
+            } ${
+                needsAttention ? 'animate-pulse-glow' : ''
+            }`}>
+                <label className="block text-sm font-medium text-gray-700 relative">
+                    <div className="flex items-center gap-2">
+                        {label} {required && <span className="text-red-500">*</span>}
+                        
+                        {isAutoFilled && (
+                            <div className="flex items-center gap-1">
+                                <div className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs flex items-center gap-1 animate-fade-in">
+                                    <Sparkles size={10} />
+                                </div>
+                            </div>
+                        )}
+                        
+                        {needsAttention && (
+                            <div className="bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full text-xs flex items-center gap-1 animate-bounce">
+                            </div>
+                        )}
+                    </div>
+                </label>
+                
+                {options ? (
+                    <select
+                        value={value || ''}
+                        onChange={(e) => onChange(e.target.value)}
+                        className={`w-full px-3 py-2 border rounded-lg transition-all duration-300 focus:ring-2 focus:border-transparent ${
+                            isAutoFilled 
+                                ? 'border-green-300 bg-green-50 focus:ring-green-500' 
+                                : needsAttention 
+                                    ? 'border-orange-300 bg-orange-50 focus:ring-orange-500 animate-glow-orange' 
+                                    : 'border-gray-300 focus:ring-blue-500'
+                        }`}
+                        aria-label={fieldDescription}
+                        onFocus={() => speechEnabled && speak(fieldDescription)}
+                    >
+                        <option value="">Sélectionner...</option>
+                        {options.map(option => (
+                            <option key={option} value={option}>{option}</option>
+                        ))}
+                    </select>
+                ) : (
+                    <input
+                        type={type}
+                        value={value || ''}
+                        onChange={(e) => onChange(e.target.value)}
+                        className={`w-full px-3 py-2 border rounded-lg transition-all duration-300 focus:ring-2 focus:border-transparent ${
+                            isAutoFilled 
+                                ? 'border-green-300 bg-green-50 focus:ring-green-500' 
+                                : needsAttention 
+                                    ? 'border-orange-300 bg-orange-50 focus:ring-orange-500 animate-glow-orange' 
+                                    : 'border-gray-300 focus:ring-blue-500'
+                        }`}
+                        aria-label={fieldDescription}
+                        onFocus={() => speechEnabled && speak(fieldDescription)}
+                    />
+                )}
+            </div>
+        );
+    };
 
     const isAllDocumentsValid = () => {
         const expectedTypes = { carteGrise: 'CARTE_GRISE', identite: 'CIP', permis: 'PERMIS' };
@@ -291,8 +505,13 @@ const SmartInsuranceForm = () => {
             {isAllDocumentsValid() && (
                 <div className="text-center">
                     <button
-                        onClick={() => setStep(2)}
-                        className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                        onClick={() => {
+                            setStep(2);
+                            if (speechEnabled) speak("Passage à l'étape 2, formulaire");
+                        }}
+                        className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-all duration-300 hover:scale-105 font-semibold animate-fade-in"
+                        aria-label="Continuer vers le formulaire"
+                        onFocus={() => speechEnabled && speak("Bouton continuer vers le formulaire")}
                     >
                         Continuer vers le formulaire
                     </button>
@@ -301,7 +520,7 @@ const SmartInsuranceForm = () => {
 
             {Object.values(extractedData).some(data => data) && !isAllDocumentsValid() && (
                 <div className="text-center">
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 max-w-md mx-auto">
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 max-w-md mx-auto animate-pulse">
                         <div className="flex items-center gap-2 text-yellow-800">
                             <X size={16} />
                             <span className="font-medium">Documents manquants ou incorrects</span>
@@ -321,19 +540,22 @@ const SmartInsuranceForm = () => {
                 <h2 className="text-3xl font-bold text-gray-900">Vérification et Complétion</h2>
                 <button
                     onClick={() => setStep(1)}
-                    className="text-blue-600 hover:text-blue-700 font-medium"
+                    className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                    aria-label="Retour aux documents"
+                    onFocus={() => speechEnabled && speak("Bouton retour aux documents")}
                 >
                     ← Retour aux documents
                 </button>
             </div>
 
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4 animate-fade-in">
                 <div className="flex items-center gap-2 text-green-800">
-                    <Check size={20} />
+                    <Sparkles size={20} className="animate-pulse" />
                     <span className="font-medium">Données extraites automatiquement</span>
                 </div>
                 <p className="text-green-700 text-sm mt-1">
-                    Vérifiez les informations ci-dessous et complétez les champs manquants
+                    Les champs <span className="inline-flex items-center gap-1 bg-green-100 px-1 rounded"><Sparkles size={10}/>auto-remplis</span> sont à vérifier. 
+                    Les champs <span className="inline-flex items-center gap-1 bg-orange-100 px-1 rounded"><AlertCircle size={10}/>à compléter</span> nécessitent votre attention.
                 </p>
             </div>
 
@@ -349,6 +571,7 @@ const SmartInsuranceForm = () => {
                         label="Numéro d'immatriculation"
                         value={formData.immatriculation}
                         onChange={(val) => setFormData(prev => ({ ...prev, immatriculation: val }))}
+                        fieldName="immatriculation"
                         required
                     />
 
@@ -357,12 +580,14 @@ const SmartInsuranceForm = () => {
                             label="Marque"
                             value={formData.marque}
                             onChange={(val) => setFormData(prev => ({ ...prev, marque: val }))}
+                            fieldName="marque"
                             required
                         />
                         <FormField
                             label="Modèle"
                             value={formData.modele}
                             onChange={(val) => setFormData(prev => ({ ...prev, modele: val }))}
+                            fieldName="modele"
                             required
                         />
                     </div>
@@ -372,12 +597,14 @@ const SmartInsuranceForm = () => {
                             label="Puissance fiscale"
                             value={formData.puissanceFiscale}
                             onChange={(val) => setFormData(prev => ({ ...prev, puissanceFiscale: val }))}
+                            fieldName="puissanceFiscale"
                             required
                         />
                         <FormField
                             label="Nombre de places"
                             value={formData.placesAssises}
                             onChange={(val) => setFormData(prev => ({ ...prev, placesAssises: val }))}
+                            fieldName="placesAssises"
                             required
                         />
                     </div>
@@ -386,6 +613,7 @@ const SmartInsuranceForm = () => {
                         label="Numéro de châssis"
                         value={formData.numeroChasis}
                         onChange={(val) => setFormData(prev => ({ ...prev, numeroChasis: val }))}
+                        fieldName="numeroChasis"
                         required
                     />
 
@@ -393,6 +621,7 @@ const SmartInsuranceForm = () => {
                         label="Date de mise en circulation"
                         value={formData.dateMiseCirculation}
                         onChange={(val) => setFormData(prev => ({ ...prev, dateMiseCirculation: val }))}
+                        fieldName="dateMiseCirculation"
                         type="date"
                         required
                     />
@@ -401,6 +630,7 @@ const SmartInsuranceForm = () => {
                         label="Carburation"
                         value={formData.carburation}
                         onChange={(val) => setFormData(prev => ({ ...prev, carburation: val }))}
+                        fieldName="carburation"
                         options={['ESSENCE', 'DIESEL', 'ELECTRIQUE', 'HYBRIDE']}
                         required
                     />
@@ -409,6 +639,7 @@ const SmartInsuranceForm = () => {
                         label="Valeur du véhicule (FCFA)"
                         value={formData.valeurVehicule}
                         onChange={(val) => setFormData(prev => ({ ...prev, valeurVehicule: val }))}
+                        fieldName="valeurVehicule"
                         type="number"
                         required
                     />
@@ -417,6 +648,7 @@ const SmartInsuranceForm = () => {
                         label="Valeur vénale (FCFA)"
                         value={formData.valeurVenale}
                         onChange={(val) => setFormData(prev => ({ ...prev, valeurVenale: val }))}
+                        fieldName="valeurVenale"
                         type="number"
                         required
                     />
@@ -434,12 +666,14 @@ const SmartInsuranceForm = () => {
                             label="Nom"
                             value={formData.nom}
                             onChange={(val) => setFormData(prev => ({ ...prev, nom: val }))}
+                            fieldName="nom"
                             required
                         />
                         <FormField
                             label="Prénom"
                             value={formData.prenom}
                             onChange={(val) => setFormData(prev => ({ ...prev, prenom: val }))}
+                            fieldName="prenom"
                             required
                         />
                     </div>
@@ -448,6 +682,7 @@ const SmartInsuranceForm = () => {
                         label="Email"
                         value={formData.email}
                         onChange={(val) => setFormData(prev => ({ ...prev, email: val }))}
+                        fieldName="email"
                         type="email"
                         required
                     />
@@ -456,6 +691,7 @@ const SmartInsuranceForm = () => {
                         label="NPI (Numéro Personnel d'Identification)"
                         value={formData.npi}
                         onChange={(val) => setFormData(prev => ({ ...prev, npi: val }))}
+                        fieldName="npi"
                         required
                     />
 
@@ -463,6 +699,7 @@ const SmartInsuranceForm = () => {
                         label="Date de naissance"
                         value={formData.dateNaissance}
                         onChange={(val) => setFormData(prev => ({ ...prev, dateNaissance: val }))}
+                        fieldName="dateNaissance"
                         type="date"
                         required
                     />
@@ -472,6 +709,7 @@ const SmartInsuranceForm = () => {
                             label="Sexe"
                             value={formData.sexe}
                             onChange={(val) => setFormData(prev => ({ ...prev, sexe: val }))}
+                            fieldName="sexe"
                             options={['M', 'F']}
                             required
                         />
@@ -479,6 +717,7 @@ const SmartInsuranceForm = () => {
                             label="Profession"
                             value={formData.profession}
                             onChange={(val) => setFormData(prev => ({ ...prev, profession: val }))}
+                            fieldName="profession"
                             required
                         />
                     </div>
@@ -487,6 +726,7 @@ const SmartInsuranceForm = () => {
                         label="Adresse"
                         value={formData.adresse}
                         onChange={(val) => setFormData(prev => ({ ...prev, adresse: val }))}
+                        fieldName="adresse"
                         required
                     />
 
@@ -494,6 +734,7 @@ const SmartInsuranceForm = () => {
                         label="Ville/Commune"
                         value={formData.ville}
                         onChange={(val) => setFormData(prev => ({ ...prev, ville: val }))}
+                        fieldName="ville"
                         required
                     />
 
@@ -501,6 +742,7 @@ const SmartInsuranceForm = () => {
                         label="Date d'obtention du permis"
                         value={formData.dateObtentionPermis}
                         onChange={(val) => setFormData(prev => ({ ...prev, dateObtentionPermis: val }))}
+                        fieldName="dateObtentionPermis"
                         type="date"
                         required
                     />
@@ -509,6 +751,7 @@ const SmartInsuranceForm = () => {
                         label="Numéro de permis"
                         value={formData.numeroPermis}
                         onChange={(val) => setFormData(prev => ({ ...prev, numeroPermis: val }))}
+                        fieldName="numeroPermis"
                         required
                     />
 
@@ -516,6 +759,7 @@ const SmartInsuranceForm = () => {
                         label="Catégorie socio-professionnelle"
                         value={formData.categorieSocio}
                         onChange={(val) => setFormData(prev => ({ ...prev, categorieSocio: val }))}
+                        fieldName="categorieSocio"
                         options={['Employé', 'Cadre', 'Commerçant', 'Artisan', 'Fonctionnaire', 'Étudiant', 'Retraité', 'Autre']}
                         required
                     />
@@ -524,6 +768,7 @@ const SmartInsuranceForm = () => {
                         label="Durée d'assurance souhaitée"
                         value={formData.dureeAssurance}
                         onChange={(val) => setFormData(prev => ({ ...prev, dureeAssurance: val }))}
+                        fieldName="dureeAssurance"
                         options={['6 mois', '1 an', '2 ans']}
                         required
                     />
@@ -532,6 +777,7 @@ const SmartInsuranceForm = () => {
                         label="Date de prise d'effet"
                         value={formData.datePriseEffet}
                         onChange={(val) => setFormData(prev => ({ ...prev, datePriseEffet: val }))}
+                        fieldName="datePriseEffet"
                         type="date"
                         required
                     />
@@ -541,7 +787,7 @@ const SmartInsuranceForm = () => {
             <div className="text-center pt-6">
                 <button
                     onClick={() => {
-                        // Simulation du calcul du devis
+                        // Simulation du calcul du devis (LOGIQUE ORIGINALE)
                         const mockQuote = {
                             vehicule: `${formData.marque} ${formData.modele}`,
                             immatriculation: formData.immatriculation,
@@ -551,8 +797,11 @@ const SmartInsuranceForm = () => {
                         };
                         setInsuranceQuote(mockQuote);
                         setStep(3);
+                        if (speechEnabled) speak("Devis généré, passage à l'étape suivante");
                     }}
-                    className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-colors font-semibold"
+                    className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-all duration-300 hover:scale-105 font-semibold"
+                    aria-label="Obtenir le devis"
+                    onFocus={() => speechEnabled && speak("Bouton obtenir le devis")}
                 >
                     Obtenir le devis
                 </button>
@@ -743,7 +992,7 @@ const SmartInsuranceForm = () => {
 
                         <button
                             onClick={() => {
-                                // Simulation du paiement
+                                // Simulation du paiement (LOGIQUE ORIGINALE)
                                 setPaymentStatus('success');
                                 setTimeout(() => setStep(6), 2000);
                             }}
@@ -803,7 +1052,11 @@ const SmartInsuranceForm = () => {
                 <h3 className="text-xl font-semibold text-gray-900 mb-4">Vos documents d'assurance</h3>
 
                 <div className="grid gap-4">
-                    <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                         tabIndex="0"
+                         aria-label="Document e-Attestation d'assurance. Document officiel de couverture"
+                         onFocus={() => speechEnabled && speak("Document e-Attestation d'assurance")}
+                    >
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                                 <Shield className="w-5 h-5 text-blue-600" />
@@ -813,12 +1066,21 @@ const SmartInsuranceForm = () => {
                                 <p className="text-sm text-gray-500">Document officiel de couverture</p>
                             </div>
                         </div>
-                        <button className="text-blue-600 hover:text-blue-700">
+                        <button 
+                            className="text-blue-600 hover:text-blue-700"
+                            aria-label="Télécharger e-Attestation d'assurance"
+                            onFocus={() => speechEnabled && speak("Bouton télécharger e-Attestation d'assurance")}
+                            onClick={() => speechEnabled && speak("Téléchargement de l'e-Attestation d'assurance")}
+                        >
                             <Download size={20} />
                         </button>
                     </div>
 
-                    <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                         tabIndex="0"
+                         aria-label="Document Conditions particulières. Détails spécifiques de votre contrat"
+                         onFocus={() => speechEnabled && speak("Document Conditions particulières")}
+                    >
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                                 <FileText className="w-5 h-5 text-green-600" />
@@ -828,12 +1090,21 @@ const SmartInsuranceForm = () => {
                                 <p className="text-sm text-gray-500">Détails spécifiques de votre contrat</p>
                             </div>
                         </div>
-                        <button className="text-blue-600 hover:text-blue-700">
+                        <button 
+                            className="text-blue-600 hover:text-blue-700"
+                            aria-label="Télécharger Conditions particulières"
+                            onFocus={() => speechEnabled && speak("Bouton télécharger Conditions particulières")}
+                            onClick={() => speechEnabled && speak("Téléchargement des Conditions particulières")}
+                        >
                             <Download size={20} />
                         </button>
                     </div>
 
-                    <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                         tabIndex="0"
+                         aria-label="Document Reçu d'encaissement. Preuve de paiement de la prime"
+                         onFocus={() => speechEnabled && speak("Document Reçu d'encaissement")}
+                    >
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                                 <Receipt className="w-5 h-5 text-purple-600" />
@@ -843,12 +1114,21 @@ const SmartInsuranceForm = () => {
                                 <p className="text-sm text-gray-500">Preuve de paiement de la prime</p>
                             </div>
                         </div>
-                        <button className="text-blue-600 hover:text-blue-700">
+                        <button 
+                            className="text-blue-600 hover:text-blue-700"
+                            aria-label="Télécharger Reçu d'encaissement"
+                            onFocus={() => speechEnabled && speak("Bouton télécharger Reçu d'encaissement")}
+                            onClick={() => speechEnabled && speak("Téléchargement du Reçu d'encaissement")}
+                        >
                             <Download size={20} />
                         </button>
                     </div>
 
-                    <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                    <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                         tabIndex="0"
+                         aria-label="Document Conditions générales. Clauses générales du contrat"
+                         onFocus={() => speechEnabled && speak("Document Conditions générales")}
+                    >
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
                                 <FileText className="w-5 h-5 text-gray-600" />
@@ -858,7 +1138,12 @@ const SmartInsuranceForm = () => {
                                 <p className="text-sm text-gray-500">Clauses générales du contrat</p>
                             </div>
                         </div>
-                        <button className="text-blue-600 hover:text-blue-700">
+                        <button 
+                            className="text-blue-600 hover:text-blue-700"
+                            aria-label="Télécharger Conditions générales"
+                            onFocus={() => speechEnabled && speak("Bouton télécharger Conditions générales")}
+                            onClick={() => speechEnabled && speak("Téléchargement des Conditions générales")}
+                        >
                             <Download size={20} />
                         </button>
                     </div>
@@ -874,8 +1159,13 @@ const SmartInsuranceForm = () => {
                         setFormData({});
                         setInsuranceQuote(null);
                         setPaymentStatus(null);
+                        setFieldStatus({});
+                        setShowFieldAnimations(false);
+                        if (speechEnabled) speak("Nouvelle souscription initiée");
                     }}
                     className="flex-1 bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                    aria-label="Commencer une nouvelle souscription"
+                    onFocus={() => speechEnabled && speak("Bouton nouvelle souscription")}
                 >
                     Nouvelle souscription
                 </button>
@@ -885,43 +1175,94 @@ const SmartInsuranceForm = () => {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-            {/* Header */}
+            <style jsx>{`
+                @keyframes glow-orange {
+                    0%, 100% { box-shadow: 0 0 0 0 rgba(251, 146, 60, 0.4); }
+                    50% { box-shadow: 0 0 0 4px rgba(251, 146, 60, 0.4); }
+                }
+
+                @keyframes pulse-glow {
+                    0%, 100% { transform: scale(1); }
+                    50% { transform: scale(1.02); }
+                }
+
+                @keyframes fade-in {
+                    from { opacity: 0; transform: translateY(10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+
+                .animate-glow-orange {
+                    animation: glow-orange 2s ease-in-out infinite;
+                }
+
+                .animate-pulse-glow {
+                    animation: pulse-glow 2s ease-in-out infinite;
+                }
+
+                .animate-fade-in {
+                    animation: fade-in 0.5s ease-out;
+                }
+
+                .animate-in {
+                    animation: fade-in 0.6s ease-out forwards;
+                }
+            `}</style>
+
+            {/* Header avec bouton d'accessibilité */}
             <div className="bg-white shadow-sm border-b">
                 <div className="max-w-6xl mx-auto px-6 py-4">
                     <div className="flex items-center justify-between">
                         <h1 className="text-2xl font-bold text-gray-900">Devis Automobile</h1>
-                        <div className="flex items-center space-x-4">
-                            <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${step >= 1 ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-500'}`}>
-                                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${step >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-400 text-white'}`}>1</span>
-                                Documents
-                            </div>
-                            <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${step >= 2 ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-500'}`}>
-                                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${step >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-400 text-white'}`}>2</span>
-                                Formulaire
-                            </div>
-                            <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${step >= 3 ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-500'}`}>
-                                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${step >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-400 text-white'}`}>3</span>
-                                Devis
-                            </div>
-                            <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${step >= 4 ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-500'}`}>
-                                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${step >= 4 ? 'bg-blue-600 text-white' : 'bg-gray-400 text-white'}`}>4</span>
-                                Déclaration
-                            </div>
-                            <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${step >= 5 ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-500'}`}>
-                                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${step >= 5 ? 'bg-blue-600 text-white' : 'bg-gray-400 text-white'}`}>5</span>
-                                Paiement
-                            </div>
-                            <div className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${step >= 6 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}`}>
-                                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${step >= 6 ? 'bg-green-600 text-white' : 'bg-gray-400 text-white'}`}>6</span>
-                                Documents
+                        <div className="flex items-center gap-4">
+                            {/* Bouton d'activation audio */}
+                            <button
+                                onClick={toggleSpeech}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                                    speechEnabled 
+                                        ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                }`}
+                                aria-label={speechEnabled ? "Désactiver l'assistance vocale" : "Activer l'assistance vocale"}
+                                title="F1: Aide | F2: Décrire l'élément"
+                            >
+                                {speechEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}
+                                {speechEnabled ? 'Audio ON' : 'Audio OFF'}
+                                {isSpeaking && <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>}
+                            </button>
+
+                            {/* Indicateurs d'étapes */}
+                            <div className="flex items-center space-x-4">
+                                {[1, 2, 3, 4, 5, 6].map((stepNum) => (
+                                    <div key={stepNum} className={`flex items-center space-x-2 px-3 py-1 rounded-full text-sm transition-all duration-300 ${
+                                        step >= stepNum ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-500'
+                                    }`}>
+                                        <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold transition-all duration-300 ${
+                                            step >= stepNum ? 'bg-blue-600 text-white' : 'bg-gray-400 text-white'
+                                        }`}>
+                                            {stepNum}
+                                        </span>
+                                        {stepNum === 1 && 'Documents'}
+                                        {stepNum === 2 && 'Formulaire'}
+                                        {stepNum === 3 && 'Devis'}
+                                        {stepNum === 4 && 'Déclaration'}
+                                        {stepNum === 5 && 'Paiement'}
+                                        {stepNum === 6 && 'Documents'}
+                                    </div>
+                                ))}
                             </div>
                         </div>
                     </div>
+                    
+                    {speechEnabled && (
+                        <div className="mt-2 text-sm text-blue-600">
+                            💡 Utilisez F1 pour l'aide, F2 pour décrire l'élément actuel, Tab pour naviguer
+                        </div>
+                    )}
                 </div>
             </div>
 
             {/* Main Content */}
-            <div className="max-w-6xl mx-auto px-6 py-8">
+            <div className="max-w-6xl mx-auto px-6 py-8" role="main">
                 {step === 1 && renderStep1()}
                 {step === 2 && renderStep2()}
                 {step === 3 && renderStep3()}
