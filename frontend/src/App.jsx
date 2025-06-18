@@ -6,6 +6,8 @@ import ChatBot from "./components/chat";
 import Home from "./views/Home";
 import Header from "./components/commons/Header";
 import Footer from "./components/commons/Footer";
+import SmartInsuranceForm from "./views/automobile";
+import InsurancePartnerFinder from "./views/localisation";
 
 function App() {
   return (
@@ -15,6 +17,8 @@ function App() {
         <Routes>
           <Route path="*" element={<NotFound />} />
           <Route path="/" element={<Home />} />
+          <Route path="/automobile" element={<SmartInsuranceForm />} />
+          <Route path="/localisation" element={<InsurancePartnerFinder />} />
         </Routes>
         <Footer />
         <ChatBot />

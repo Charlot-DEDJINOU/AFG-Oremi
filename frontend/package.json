@@ -12,10 +12,12 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.1.10",
     "axios": "^1.10.0",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.516.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hook-speech-to-text": "^0.8.0",
+    "react-leaflet": "^5.0.0",
     "react-router-dom": "^7.6.2",
     "react-toastify": "^11.0.5",
     "tailwindcss": "^4.1.10",

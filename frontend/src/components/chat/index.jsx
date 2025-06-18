@@ -213,7 +213,7 @@ const ChatBot = () => {
       >
         <button
           onClick={() => setIsOpen(true)}
-          className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white p-4 rounded-full shadow-2xl transform hover:scale-110 transition-all duration-300 border-2 border-white/20"
+          className="bg-gradient-to-r from-secondary to-primary hover:from-secondary hover:to-primary text-white p-4 rounded-full shadow-2xl transform hover:scale-110 transition-all duration-300 border-2 border-white/20"
         >
           <MessageCircle size={24} />
         </button>
@@ -234,7 +234,7 @@ const ChatBot = () => {
     >
       {/* Header */}
       <div 
-        className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-4 rounded-t-2xl cursor-move flex items-center justify-between"
+        className="bg-gradient-to-r from-secondary to-primary text-white p-4 rounded-t-2xl cursor-move flex items-center justify-between"
         onMouseDown={handleMouseDown}
       >
         <div className="flex items-center gap-3">
@@ -283,7 +283,7 @@ const ChatBot = () => {
               >
                 <div className="flex items-start gap-2 max-w-[80%]">
                   {message.sender === 'assistant' && (
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 bg-gradient-to-r from-secondary to-primary rounded-full flex items-center justify-center flex-shrink-0">
                       <MessageCircle size={14} className="text-white" />
                     </div>
                   )}
@@ -291,7 +291,7 @@ const ChatBot = () => {
                     <div
                       className={`p-3 rounded-2xl ${
                         message.sender === 'user'
-                          ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white'
+                          ? 'bg-gradient-to-r from-secondary to-primary text-white'
                           : 'bg-white border border-gray-200 text-gray-800'
                       }`}
                     >
@@ -304,7 +304,7 @@ const ChatBot = () => {
                       {message.sender === 'assistant' && (
                         <button
                           onClick={() => speakMessage(message.text)}
-                          className="text-gray-400 hover:text-blue-500 transition-colors"
+                          className="text-gray-400 hover:text-secondary transition-colors"
                         >
                           <Volume2 size={12} />
                         </button>
@@ -319,7 +319,7 @@ const ChatBot = () => {
             {isLoading && (
               <div className="mb-4 flex justify-start">
                 <div className="flex items-start gap-2 max-w-[80%]">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 bg-gradient-to-r from-secondary to-primary rounded-full flex items-center justify-center flex-shrink-0">
                     <Loader2 size={14} className="text-white animate-spin" />
                   </div>
                   <div className="bg-white border border-gray-200 text-gray-800 p-3 rounded-2xl">
@@ -350,7 +350,7 @@ const ChatBot = () => {
                   onKeyPress={handleKeyPress}
                   placeholder={isRecording ? "Parlez maintenant..." : "Tapez votre message..."}
                   disabled={isLoading}
-                  className="w-full p-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none overflow-y-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full p-3 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-secondary resize-none overflow-y-auto disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ 
                     minHeight: '44px',
                     maxHeight: '120px',
@@ -361,7 +361,7 @@ const ChatBot = () => {
                   onClick={toggleListening}
                   disabled={isLoading}
                   className={`absolute right-3 top-3 ${
-                    isRecording ? 'text-red-500 animate-pulse' : 'text-gray-400 hover:text-blue-500'
+                    isRecording ? 'text-red-500 animate-pulse' : 'text-gray-400 hover:text-secondary'
                   } transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {isRecording ? <MicOff size={18} /> : <Mic size={18} />}
@@ -370,7 +370,7 @@ const ChatBot = () => {
               <button
                 onClick={handleSendMessage}
                 disabled={!inputText.trim() || isLoading}
-                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-white p-3 rounded-xl transition-all duration-200 transform hover:scale-105 flex-shrink-0"
+                className="bg-gradient-to-r from-secondary to-primary hover:from-secondary hover:to-primary disabled:opacity-50 disabled:cursor-not-allowed text-white p-3 rounded-xl transition-all duration-200 transform hover:scale-105 flex-shrink-0"
               >
                 {isLoading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
               </button>
