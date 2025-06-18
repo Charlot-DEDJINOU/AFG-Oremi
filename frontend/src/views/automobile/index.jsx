@@ -336,30 +336,34 @@ const SmartInsuranceForm = () => {
                     )}
 
                     {!doc && (
-                        <label className="cursor-pointer">
+                        <div>
                             <input
                                 type="file"
                                 accept="image/*,.pdf"
                                 onChange={(e) => handleFileUpload(e, type)}
                                 className="hidden"
+                                id={`file-input-${type}`}
                                 aria-label={`Sélectionner le fichier ${title}`}
                             />
-                            <div className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all duration-300 hover:scale-105 inline-flex items-center gap-2"
-                                role="button"
+                            <label 
+                                htmlFor={`file-input-${type}`}
+                                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all duration-300 hover:scale-105 inline-flex items-center gap-2 cursor-pointer"
+                                tabIndex="0"
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' || e.key === ' ') {
                                         e.preventDefault();
-                                        e.target.previousElementSibling.click();
+                                        document.getElementById(`file-input-${type}`).click();
                                     }
                                 }}
                                 onFocus={() => announceVocally(`Bouton pour choisir le fichier ${title}`)}
+                                role="button"
                             >
                                 <Upload size={16} />
                                 Choisir le fichier
-                            </div>
-                        </label>
+                            </label>
+                        </div>
                     )}
-
+                    
                     {doc && (
                         <div className="space-y-3">
                             <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
