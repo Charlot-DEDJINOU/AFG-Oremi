@@ -2,7 +2,7 @@ import { postFile } from '../../services/api';
 import { onServerError } from '../../services/Helper';
 import { CardGrise } from '../../data/CardGrise';
 import { convertDateToISO } from '../../utils/convertDateToISO';
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { Upload, FileText, CreditCard, Car, Check, X, Camera, User, Calendar, MapPin, Settings, ChevronRight, Download, Shield, Receipt, Sparkles, Eye, AlertCircle, Volume2, VolumeX } from 'lucide-react';
 
 // Hook personnalisé pour la synthèse vocale
@@ -44,11 +44,7 @@ const useSpeech = () => {
     return { speak, stop, toggle, isEnabled, isSpeaking };
 };
 
-const announceVocally = useCallback((text) => {
-    if (speechEnabled) {
-        speak(text);
-    }
-}, [speechEnabled, speak]);
+
 
 const SmartInsuranceForm = () => {
     const [step, setStep] = useState(1);
@@ -70,6 +66,12 @@ const SmartInsuranceForm = () => {
 
     // Hook pour la synthèse vocale
     const { speak, stop, toggle: toggleSpeech, isEnabled: speechEnabled, isSpeaking } = useSpeech();
+
+    const announceVocally = useCallback((text) => {
+        if (speechEnabled) {
+            speak(text);
+        }
+    }, [speechEnabled, speak]);
 
     // Message de bienvenue au chargement
     useEffect(() => {
@@ -488,7 +490,7 @@ const SmartInsuranceForm = () => {
     const renderStep1 = () => (
         <div className="space-y-8">
             <div className="text-center">
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">Upload vos documents</h2>
+                <h2 className="text-3xl font-bold text-gray-900 mb-4">Téléchargez vos documents</h2>
                 <p className="text-gray-600 mb-2">Téléchargez vos 3 documents pour une extraction automatique des données</p>
                 <p className="text-sm text-blue-600 font-medium mb-8">⚠️ Important: La Carte CIP doit être celle du bénéficiaire de l'assurance</p>
             </div>
