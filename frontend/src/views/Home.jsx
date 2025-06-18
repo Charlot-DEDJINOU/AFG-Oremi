@@ -13,6 +13,7 @@ import ProductCard from '../components/home/ProductCard';
 import Button from '../components/commons/Button';
 import assurance_picture from "../assets/assurance_picture.png"
 import person_picture from "../assets/person_picture.png"
+import { useNavigate } from "react-router-dom"
 
 const services = [
   {
@@ -97,6 +98,7 @@ const processSteps = [
 ];
 
 const HomePage = () => {
+  const navigate = useNavigate()
   return (
     <div className="min-h-screen bg-gray-50">
 
@@ -135,7 +137,7 @@ const HomePage = () => {
                       <h3 className="text-lg lg:text-xl font-bold text-gray-900">Auto</h3>
                     </div>
                     <button className="w-8 h-8 lg:w-10 lg:h-10 bg-white rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition-shadow">
-                      <ArrowRight className="w-3 h-3 lg:w-4 lg:h-4 text-gray-600" />
+                      <ArrowRight className="w-3 h-3 lg:w-4 lg:h-4 text-gray-600" onClick={() => navigate('/automobile')}/>
                     </button>
                   </div>
 
