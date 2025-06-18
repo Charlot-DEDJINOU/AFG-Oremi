@@ -167,6 +167,12 @@ class ChatHandler:
                         - Assurance Voyage
                         - Assurance Santé individuelle (SOHU) avec carte biométrique
 
+                        ## PIECES POUR DEVIS
+                        - Carte grise ou certificat d'immatriculation
+                        - Carte CIP du bénéficiaire
+                        - Permis de conduire
+
+
                         ## VOTRE APPROCHE
                         - Réponses directes de 1-3 phrases maximum
                         - Une seule question par réponse
