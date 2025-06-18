@@ -276,15 +276,17 @@ const SmartInsuranceForm = () => {
 
         setFormData(prev => ({ ...prev, ...updates }));
     };
-
     const handleFileUpload = useCallback((e, type) => {
+        console.log('1. Fichier sélectionné:', e.target.files[0]); // DEBUG
         const file = e.target.files[0];
         if (file) {
+            console.log('2. Mise à jour documents...'); // DEBUG
             setDocuments(prev => ({ ...prev, [type]: file }));
+            console.log('3. Lancement processDocument...'); // DEBUG
             processDocument(file, type);
         }
-    }, []);
-
+    }, [speechEnabled]);
+    
     const DocumentUploadCard = ({ type, title, icon: Icon, description, expectedType }) => {
         const doc = documents[type];
         const isProcessing = loading[type];
@@ -363,7 +365,7 @@ const SmartInsuranceForm = () => {
                             </label>
                         </div>
                     )}
-                    
+
                     {doc && (
                         <div className="space-y-3">
                             <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
@@ -392,7 +394,7 @@ const SmartInsuranceForm = () => {
                                 </div>
                             )}
 
-                            <button
+                            <button type="button"
                                 onClick={() => {
                                     setDocuments(prev => ({ ...prev, [type]: null }));
                                     setExtractedData(prev => ({ ...prev, [type]: null }));
@@ -525,7 +527,7 @@ const SmartInsuranceForm = () => {
 
             {isAllDocumentsValid() && (
                 <div className="text-center">
-                    <button
+                    <button type="button"
                         onClick={() => {
                             setStep(2);
                             if (speechEnabled) speak("Passage à l'étape 2, formulaire");
@@ -559,7 +561,7 @@ const SmartInsuranceForm = () => {
         <div className="space-y-8">
             <div className="flex items-center justify-between">
                 <h2 className="text-3xl font-bold text-gray-900">Vérification et Complétion</h2>
-                <button
+                <button type="button"
                     onClick={() => setStep(1)}
                     className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
                     aria-label="Retour aux documents"
@@ -806,7 +808,7 @@ const SmartInsuranceForm = () => {
             </div>
 
             <div className="text-center pt-6">
-                <button
+                <button type="button"
                     onClick={() => {
                         // Simulation du calcul du devis (LOGIQUE ORIGINALE)
                         const mockQuote = {
@@ -834,7 +836,7 @@ const SmartInsuranceForm = () => {
         <div className="space-y-8">
             <div className="flex items-center justify-between">
                 <h2 className="text-3xl font-bold text-gray-900">Récapitulatif du dossier</h2>
-                <button
+                <button type="button"
                     onClick={() => setStep(2)}
                     className="text-blue-600 hover:text-blue-700 font-medium"
                 >
@@ -867,7 +869,7 @@ const SmartInsuranceForm = () => {
             <div className="bg-white rounded-xl border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-4">
                     <h4 className="text-lg font-semibold text-gray-900">Informations du véhicule</h4>
-                    <button className="text-gray-400">
+                    <button type="button" className="text-gray-400">
                         <ChevronRight size={20} />
                     </button>
                 </div>
@@ -913,13 +915,13 @@ const SmartInsuranceForm = () => {
             </div>
 
             <div className="flex gap-4">
-                <button
+                <button type="button"
                     onClick={() => setStep(2)}
                     className="flex-1 bg-white border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center justify-center gap-2"
                 >
                     Retour
                 </button>
-                <button
+                <button type="button"
                     onClick={() => setStep(4)}
                     className="flex-1 bg-blue-900 text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition-colors font-semibold"
                 >
@@ -957,13 +959,13 @@ const SmartInsuranceForm = () => {
             </div>
 
             <div className="flex gap-4">
-                <button
+                <button type="button"
                     onClick={() => setStep(3)}
                     className="flex-1 bg-white border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium flex items-center justify-center gap-2"
                 >
                     Retour
                 </button>
-                <button
+                <button type="button"
                     onClick={() => setStep(5)}
                     className="flex-1 bg-purple-700 text-white px-6 py-3 rounded-lg hover:bg-purple-800 transition-colors font-semibold"
                 >
@@ -1011,7 +1013,7 @@ const SmartInsuranceForm = () => {
                             </div>
                         </div>
 
-                        <button
+                        <button type="button"
                             onClick={() => {
                                 // Simulation du paiement (LOGIQUE ORIGINALE)
                                 setPaymentStatus('success');
@@ -1038,7 +1040,7 @@ const SmartInsuranceForm = () => {
             )}
 
             <div className="flex gap-4">
-                <button
+                <button type="button"
                     onClick={() => setStep(4)}
                     className="flex-1 bg-white border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors font-medium"
                     disabled={paymentStatus === 'success'}
@@ -1087,7 +1089,7 @@ const SmartInsuranceForm = () => {
                                 <p className="text-sm text-gray-500">Document officiel de couverture</p>
                             </div>
                         </div>
-                        <button 
+                        <button type="button" 
                             className="text-blue-600 hover:text-blue-700"
                             aria-label="Télécharger e-Attestation d'assurance"
                             onFocus={() => announceVocally("Bouton télécharger e-Attestation d'assurance")}
@@ -1111,7 +1113,7 @@ const SmartInsuranceForm = () => {
                                 <p className="text-sm text-gray-500">Détails spécifiques de votre contrat</p>
                             </div>
                         </div>
-                        <button 
+                        <button type="button" 
                             className="text-blue-600 hover:text-blue-700"
                             aria-label="Télécharger Conditions particulières"
                             onFocus={() => announceVocally("Bouton télécharger Conditions particulières")}
@@ -1135,7 +1137,7 @@ const SmartInsuranceForm = () => {
                                 <p className="text-sm text-gray-500">Preuve de paiement de la prime</p>
                             </div>
                         </div>
-                        <button 
+                        <button type="button" 
                             className="text-blue-600 hover:text-blue-700"
                             aria-label="Télécharger Reçu d'encaissement"
                             onFocus={() => announceVocally("Bouton télécharger Reçu d'encaissement")}
@@ -1159,7 +1161,7 @@ const SmartInsuranceForm = () => {
                                 <p className="text-sm text-gray-500">Clauses générales du contrat</p>
                             </div>
                         </div>
-                        <button 
+                        <button type="button" 
                             className="text-blue-600 hover:text-blue-700"
                             aria-label="Télécharger Conditions générales"
                             onFocus={() => announceVocally("Bouton télécharger Conditions générales")}
@@ -1172,7 +1174,7 @@ const SmartInsuranceForm = () => {
             </div>
 
             <div className="flex gap-4">
-                <button
+                <button type="button"
                     onClick={() => {
                         setStep(1);
                         setDocuments({ carteGrise: null, identite: null, permis: null });
@@ -1236,7 +1238,7 @@ const SmartInsuranceForm = () => {
                         <h1 className="text-2xl font-bold text-gray-900">Devis Automobile</h1>
                         <div className="flex items-center gap-4">
                             {/* Bouton d'activation audio */}
-                            <button
+                            <button type="button"
                                 onClick={toggleSpeech}
                                 className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
                                     speechEnabled 
@@ -1283,14 +1285,19 @@ const SmartInsuranceForm = () => {
             </div>
 
             {/* Main Content */}
-            <div className="max-w-6xl mx-auto px-6 py-8" role="main">
+            <form
+                onSubmit={e => e.preventDefault()}
+                className="max-w-6xl mx-auto px-6 py-8"
+                role="main"
+                >
                 {step === 1 && renderStep1()}
                 {step === 2 && renderStep2()}
                 {step === 3 && renderStep3()}
                 {step === 4 && renderStep4()}
                 {step === 5 && renderStep5()}
                 {step === 6 && renderStep6()}
-            </div>
+        
+            </form>
         </div>
     );
 };
