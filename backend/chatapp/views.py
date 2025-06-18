@@ -1000,6 +1000,70 @@ import tempfile, os, requests, base64, mimetypes
 parser = JsonOutputParser(diff=False)
 format_instructions = parser.get_format_instructions()
 
+# Prompt for vehicle registration card (carte grise)
+PROMPT_GRIS = """
+Tu es un assistant expert en extraction de données depuis le texte OCR d’une carte grise.
+Objectif : repérer et normaliser un maximum d’informations, puis renvoyer strictement un JSON
+contenant *exactement* les clefs suivantes (mettre "" si la donnée est absente) :
+- typeDocument                  # Permis de conduire (si tu constate que ce n'est pas permis, tu mets SEULEMENT à quel document ça ressemble)
+- immatriculation
+- datePremiereImmatriculation
+- numeroFormule
+- codeType
+- designationCommerciale
+- marque
+- modele
+- varianteVersion
+- genreVehicule
+- carrosserie
+- carburant
+- energie
+- puissanceFiscale
+- puissanceDIN
+- cylindree
+- masseEnChargeMaxAutorisee
+- poidsÀVide
+- ptac
+- ptacRemorque
+- nombrePlacesAssises
+- couleur
+- numeroVIN
+- immatriculationPrecedente
+- titulaire_nom
+- titulaire_prenom
+- titulaire_adresse_numero
+- titulaire_adresse_rue
+- titulaire_adresse_codePostal
+- titulaire_adresse_ville
+- coTitulaire_nom
+- coTitulaire_prenom
+- coTitulaire_adresse_numero
+- coTitulaire_adresse_rue
+- coTitulaire_adresse_codePostal
+- coTitulaire_adresse_ville
+- statutProprietaire
+- typeCertificat
+- dateValiditeCertificat
+- observations
+
+Instructions :
+1. Analyse chaque ligne du texte OCR, y compris les libellés et abréviations.
+2. Détecte les synonymes (ex. « genre » vs « type », « PTAC » vs « masse en charge »).
+3. Normalise tous les formats :
+   - Dates en JJ/MM/AAAA
+   - Poids en kg
+   - Puissances en CV ou kW selon le contexte
+4. Remplis chaque clef du JSON, même vide.
+5. Ne renvoie **que** l’objet JSON valide, sans aucun commentaire.
+
+{format_instructions}
+
+Texte OCR à traiter :
+{text}"""
+
+# JSON parser and templates
+parser = JsonOutputParser(diff=False)
+format_instructions = parser.get_format_instructions()
 
 # Prompt for vehicle registration card (carte grise)
 PROMPT_GRIS = """
