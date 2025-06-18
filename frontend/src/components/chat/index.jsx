@@ -242,7 +242,7 @@ const ChatBot = () => {
             <MessageCircle size={16} />
           </div>
           <div>
-            <h3 className="font-semibold">Assistant Chat</h3>
+            <h3 className="font-semibold">OREMI</h3>
             <p className="text-xs text-white/80">
               {isLoading ? 'En cours de traitement...' : 'En ligne'}
             </p>
@@ -329,7 +329,7 @@ const ChatBot = () => {
                         <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                         <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                       </div>
-                      <span className="text-sm text-gray-500">L'assistant réfléchit...</span>
+                      <span className="text-sm text-gray-500">Oremi réfléchit...</span>
                     </div>
                   </div>
                 </div>

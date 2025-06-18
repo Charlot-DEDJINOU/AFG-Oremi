@@ -366,7 +366,7 @@ const InsurancePartnerFinder = () => {
       {/* Header */}
       <div className="bg-white rounded-lg shadow-md p-6 mb-6">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">
-          Trouvez vos partenaires avec React-Leaflet
+          <span className='text-primary font-bold'>En un clic</span> trouvez nos partenaires à proximité
         </h1>
         <p className="text-gray-600">
           Découvrez Oremi by AFG et nos partenaires avec cartes satellite réelles
