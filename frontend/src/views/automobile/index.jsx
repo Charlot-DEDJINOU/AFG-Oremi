@@ -1,5 +1,3 @@
-// import React, { useState, useCallback, useEffect } from 'react';
-// import { Upload, FileText, CreditCard, Car, Check, X, Camera, User, Calendar, MapPin, Settings, ChevronRight, Download, Shield, Receipt, Sparkles, Eye, AlertCircle } from 'lucide-react';
 import { postFile } from '../../services/api';
 import { onServerError } from '../../services/Helper';
 import { CardGrise } from '../../data/CardGrise';
@@ -46,6 +44,12 @@ const useSpeech = () => {
     return { speak, stop, toggle, isEnabled, isSpeaking };
 };
 
+const announceVocally = useCallback((text) => {
+    if (speechEnabled) {
+        speak(text);
+    }
+}, [speechEnabled, speak]);
+
 const SmartInsuranceForm = () => {
     const [step, setStep] = useState(1);
     const [insuranceQuote, setInsuranceQuote] = useState(null);
@@ -62,7 +66,6 @@ const SmartInsuranceForm = () => {
     });
     const [formData, setFormData] = useState({});
     const [loading, setLoading] = useState({});
-    const [fieldStatus, setFieldStatus] = useState({});
     const [showFieldAnimations, setShowFieldAnimations] = useState(false);
 
     // Hook pour la synthèse vocale
@@ -128,11 +131,10 @@ const SmartInsuranceForm = () => {
     useEffect(() => {
         if (step === 2 && Object.values(extractedData).some(data => data)) {
             setShowFieldAnimations(true);
-            analyzeFieldStatus();
         }
     }, [step, extractedData]);
 
-    const analyzeFieldStatus = () => {
+    const fieldStatus = useMemo(() => {
         const status = {};
         const requiredFields = [
             'immatriculation', 'marque', 'modele', 'puissanceFiscale', 'numeroChasis',
@@ -150,8 +152,8 @@ const SmartInsuranceForm = () => {
             }
         });
 
-        setFieldStatus(status);
-    };
+        return status;
+    }, [formData]);
 
     // Fonction de validation des types de documents (LOGIQUE ORIGINALE)
     const validateDocumentType = (detectedType, expectedType) => {
@@ -217,12 +219,26 @@ const SmartInsuranceForm = () => {
             }
         }
 
+        
         setExtractedData(prev => ({ ...prev, [type]: mockData }));
         setLoading(prev => ({ ...prev, [type]: false }));
 
-        // Annonce vocale de fin de traitement
+        // Vérification du type de document et annonce vocale
         if (speechEnabled && mockData && Object.keys(mockData).length > 0) {
-            speak("Données extraites avec succès !");
+            const expectedTypes = { 
+                carteGrise: 'CARTE_GRISE', 
+                identite: 'CIP', 
+                permis: 'PERMIS' 
+            };
+            
+            const expectedType = expectedTypes[type];
+            const isValidType = expectedType && validateDocumentType(mockData.typeDocument, expectedType);
+            
+            if (isValidType) {
+                speak("Données extraites avec succès !");
+            } else {
+                speak("Attention : le type de document ne correspond pas au document attendu. Veuillez vérifier votre fichier.");
+            }
         }
 
         // Auto-fill form data (LOGIQUE ORIGINALE)
@@ -294,7 +310,7 @@ const SmartInsuranceForm = () => {
             }`}
             aria-label={`Zone de téléchargement pour ${title}. ${description}`}
             tabIndex="0"
-            onFocus={() => speechEnabled && speak(`Zone de téléchargement ${title}`)}
+            onFocus={() => announceVocally(`Zone de téléchargement ${title}`)}
             >
                 <div className="text-center">
                     <Icon className={`mx-auto h-12 w-12 mb-4 transition-all duration-300 ${
@@ -327,7 +343,6 @@ const SmartInsuranceForm = () => {
                                 aria-label={`Sélectionner le fichier ${title}`}
                             />
                             <div className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-all duration-300 hover:scale-105 inline-flex items-center gap-2"
-                                tabIndex="0"
                                 role="button"
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter' || e.key === ' ') {
@@ -335,7 +350,7 @@ const SmartInsuranceForm = () => {
                                         e.target.previousElementSibling.click();
                                     }
                                 }}
-                                onFocus={() => speechEnabled && speak(`Bouton pour choisir le fichier ${title}`)}
+                                onFocus={() => announceVocally(`Bouton pour choisir le fichier ${title}`)}
                             >
                                 <Upload size={16} />
                                 Choisir le fichier
@@ -379,7 +394,7 @@ const SmartInsuranceForm = () => {
                                 }}
                                 className="text-sm text-red-600 hover:text-red-700 transition-colors"
                                 aria-label={`Remplacer le document ${title}`}
-                                onFocus={() => speechEnabled && speak(`Bouton pour remplacer ${title}`)}
+                                onFocus={() => announceVocally(`Bouton pour remplacer ${title}`)}
                             >
                                 Remplacer
                             </button>
@@ -434,7 +449,7 @@ const SmartInsuranceForm = () => {
                                     : 'border-gray-300 focus:ring-blue-500'
                         }`}
                         aria-label={fieldDescription}
-                        onFocus={() => speechEnabled && speak(fieldDescription)}
+                        onFocus={() => announceVocally(fieldDescription)}
                     >
                         <option value="">Sélectionner...</option>
                         {options.map(option => (
@@ -454,7 +469,7 @@ const SmartInsuranceForm = () => {
                                     : 'border-gray-300 focus:ring-blue-500'
                         }`}
                         aria-label={fieldDescription}
-                        onFocus={() => speechEnabled && speak(fieldDescription)}
+                        onFocus={() => announceVocally(fieldDescription)}
                     />
                 )}
             </div>
@@ -511,7 +526,7 @@ const SmartInsuranceForm = () => {
                         }}
                         className="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-all duration-300 hover:scale-105 font-semibold animate-fade-in"
                         aria-label="Continuer vers le formulaire"
-                        onFocus={() => speechEnabled && speak("Bouton continuer vers le formulaire")}
+                        onFocus={() => announceVocally("Bouton continuer vers le formulaire")}
                     >
                         Continuer vers le formulaire
                     </button>
@@ -542,7 +557,7 @@ const SmartInsuranceForm = () => {
                     onClick={() => setStep(1)}
                     className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
                     aria-label="Retour aux documents"
-                    onFocus={() => speechEnabled && speak("Bouton retour aux documents")}
+                    onFocus={() => announceVocally("Bouton retour aux documents")}
                 >
                     ← Retour aux documents
                 </button>
@@ -801,7 +816,7 @@ const SmartInsuranceForm = () => {
                     }}
                     className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 transition-all duration-300 hover:scale-105 font-semibold"
                     aria-label="Obtenir le devis"
-                    onFocus={() => speechEnabled && speak("Bouton obtenir le devis")}
+                    onFocus={() => announceVocally("Bouton obtenir le devis")}
                 >
                     Obtenir le devis
                 </button>
@@ -1055,7 +1070,7 @@ const SmartInsuranceForm = () => {
                     <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
                          tabIndex="0"
                          aria-label="Document e-Attestation d'assurance. Document officiel de couverture"
-                         onFocus={() => speechEnabled && speak("Document e-Attestation d'assurance")}
+                         onFocus={() => announceVocally("Document e-Attestation d'assurance")}
                     >
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -1069,8 +1084,8 @@ const SmartInsuranceForm = () => {
                         <button 
                             className="text-blue-600 hover:text-blue-700"
                             aria-label="Télécharger e-Attestation d'assurance"
-                            onFocus={() => speechEnabled && speak("Bouton télécharger e-Attestation d'assurance")}
-                            onClick={() => speechEnabled && speak("Téléchargement de l'e-Attestation d'assurance")}
+                            onFocus={() => announceVocally("Bouton télécharger e-Attestation d'assurance")}
+                            onClick={() => announceVocally("Téléchargement de l'e-Attestation d'assurance")}
                         >
                             <Download size={20} />
                         </button>
@@ -1079,7 +1094,7 @@ const SmartInsuranceForm = () => {
                     <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
                          tabIndex="0"
                          aria-label="Document Conditions particulières. Détails spécifiques de votre contrat"
-                         onFocus={() => speechEnabled && speak("Document Conditions particulières")}
+                         onFocus={() => announceVocally("Document Conditions particulières")}
                     >
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -1093,8 +1108,8 @@ const SmartInsuranceForm = () => {
                         <button 
                             className="text-blue-600 hover:text-blue-700"
                             aria-label="Télécharger Conditions particulières"
-                            onFocus={() => speechEnabled && speak("Bouton télécharger Conditions particulières")}
-                            onClick={() => speechEnabled && speak("Téléchargement des Conditions particulières")}
+                            onFocus={() => announceVocally("Bouton télécharger Conditions particulières")}
+                            onClick={() => announceVocally("Téléchargement des Conditions particulières")}
                         >
                             <Download size={20} />
                         </button>
@@ -1103,7 +1118,7 @@ const SmartInsuranceForm = () => {
                     <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
                          tabIndex="0"
                          aria-label="Document Reçu d'encaissement. Preuve de paiement de la prime"
-                         onFocus={() => speechEnabled && speak("Document Reçu d'encaissement")}
+                         onFocus={() => announceVocally("Document Reçu d'encaissement")}
                     >
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -1117,8 +1132,8 @@ const SmartInsuranceForm = () => {
                         <button 
                             className="text-blue-600 hover:text-blue-700"
                             aria-label="Télécharger Reçu d'encaissement"
-                            onFocus={() => speechEnabled && speak("Bouton télécharger Reçu d'encaissement")}
-                            onClick={() => speechEnabled && speak("Téléchargement du Reçu d'encaissement")}
+                            onFocus={() => announceVocally("Bouton télécharger Reçu d'encaissement")}
+                            onClick={() => announceVocally("Téléchargement du Reçu d'encaissement")}
                         >
                             <Download size={20} />
                         </button>
@@ -1127,7 +1142,7 @@ const SmartInsuranceForm = () => {
                     <div className="bg-white border border-gray-200 rounded-lg p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
                          tabIndex="0"
                          aria-label="Document Conditions générales. Clauses générales du contrat"
-                         onFocus={() => speechEnabled && speak("Document Conditions générales")}
+                         onFocus={() => announceVocally("Document Conditions générales")}
                     >
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -1141,8 +1156,8 @@ const SmartInsuranceForm = () => {
                         <button 
                             className="text-blue-600 hover:text-blue-700"
                             aria-label="Télécharger Conditions générales"
-                            onFocus={() => speechEnabled && speak("Bouton télécharger Conditions générales")}
-                            onClick={() => speechEnabled && speak("Téléchargement des Conditions générales")}
+                            onFocus={() => announceVocally("Bouton télécharger Conditions générales")}
+                            onClick={() => announceVocally("Téléchargement des Conditions générales")}
                         >
                             <Download size={20} />
                         </button>
@@ -1165,7 +1180,7 @@ const SmartInsuranceForm = () => {
                     }}
                     className="flex-1 bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
                     aria-label="Commencer une nouvelle souscription"
-                    onFocus={() => speechEnabled && speak("Bouton nouvelle souscription")}
+                    onFocus={() => announceVocally("Bouton nouvelle souscription")}
                 >
                     Nouvelle souscription
                 </button>
